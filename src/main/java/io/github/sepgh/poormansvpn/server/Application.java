@@ -7,11 +7,8 @@ import org.apache.sshd.common.io.IoServiceEventListener;
 import org.apache.sshd.common.session.Session;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
 import org.apache.sshd.server.SshServer;
-import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import org.apache.sshd.server.forward.ForwardingFilter;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
-import org.apache.sshd.server.shell.InteractiveProcessShellFactory;
-import org.apache.sshd.server.shell.ProcessShellFactory;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -20,13 +17,13 @@ import java.nio.file.Paths;
 public class Application {
     public static void main(String[] args) throws IOException {
         SshServer sshd = SshServer.setUpDefaultServer();
-        sshd.setPort(8000);
-        sshd.setHost("localhost");
-        sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Paths.get("/home/sepehr/keys/sample")));
-        sshd.setPasswordAuthenticator((username, password, serverSession) -> {
-            System.out.println(username + " : " + password);
-            return true;
-        });
+        if (args.length != 3){
+            System.out.println("Needs 3 arguments. 1: port to run in, 2: path to use in host key provider, 3: path to authentication file");
+            System.exit(1);
+        }
+        sshd.setPort(Integer.parseInt(args[0]));
+        sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Paths.get(args[1])));
+        sshd.setPasswordAuthenticator(new PlainFilePasswordAuthenticator(args[2]));
         sshd.setIoServiceEventListener(new IoServiceEventListener() {
             @Override
             public void connectionEstablished(IoConnector connector, SocketAddress local, AttributeRepository context, SocketAddress remote) throws IOException {

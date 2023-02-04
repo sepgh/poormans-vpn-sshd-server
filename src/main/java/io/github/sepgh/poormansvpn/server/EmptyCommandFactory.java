@@ -10,7 +10,6 @@ public class EmptyCommandFactory implements CommandFactory {
 
     @Override
     public Command createCommand(ChannelSession channelSession, String s) throws IOException {
-        System.out.println(s);
         return new EmptyCommand(s);
     }
 }
