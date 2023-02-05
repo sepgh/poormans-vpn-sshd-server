@@ -5,10 +5,7 @@ import org.apache.sshd.server.ExitCallback;
 import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.server.command.Command;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 
 public class EmptyCommand implements Command {
 
@@ -31,7 +28,6 @@ public class EmptyCommand implements Command {
     }
 
     public void setErrorStream(OutputStream outputStream) {
-        System.out.println("error stream was set on command: " + name);
     }
 
     public void setExitCallback(ExitCallback exitCallback) {
@@ -40,9 +36,8 @@ public class EmptyCommand implements Command {
 
     public void start(ChannelSession channelSession, Environment environment) throws IOException {
         try {
-
-            final PrintWriter writer = new PrintWriter(outputStream, true);
-            writer.println("Welcome to Poorman's VPN");
+            final PrintWriter writer = new PrintWriter(outputStream, false);
+            writer.print("Welcome to Poorman's VPN. ");
             writer.flush();
         } catch (final Exception e) {
             e.printStackTrace();
@@ -50,6 +45,12 @@ public class EmptyCommand implements Command {
     }
 
     public void destroy(ChannelSession channelSession) {
-        System.out.println("destroy was called on command: " + name);
+        try {
+            final PrintWriter writer = new PrintWriter(outputStream, false);
+            writer.print("Have a nice day");
+            writer.flush();
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
     }
 }
