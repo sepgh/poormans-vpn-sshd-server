@@ -1,12 +1,13 @@
 package io.github.sepgh.poormansvpn.server;
 
-import org.apache.sshd.common.session.Session;
-import org.apache.sshd.common.util.net.SshdSocketAddress;
+import org.apache.sshd.common.util.buffer.Buffer;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.server.command.Command;
-import org.apache.sshd.server.forward.ForwardingFilter;
+import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.server.session.ServerProxyAcceptor;
+import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.shell.ShellFactory;
 
 import java.io.IOException;
@@ -16,34 +17,19 @@ public class Application {
     public static void main(String[] args) throws IOException {
         SshServer sshd = SshServer.setUpDefaultServer();
         if (args.length != 3){
-            System.out.println("Needs 3 arguments. 1: port to run in, 2: path to use in host key provider, 3: path to authentication file");
+            System.out.println("Need 3 arguments. 1: port to run in, 2: path to use in host key provider, 3: path to authentication file");
             System.exit(1);
         }
         sshd.setPort(Integer.parseInt(args[0]));
         sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Paths.get(args[1])));
         sshd.setPasswordAuthenticator(new PlainFilePasswordAuthenticator(args[2]));
-        sshd.setForwardingFilter(new ForwardingFilter() {
+        sshd.setServerProxyAcceptor(new ServerProxyAcceptor() {
             @Override
-            public boolean canForwardX11(Session session, String s) {
-                return false;
-            }
-
-            @Override
-            public boolean canForwardAgent(Session session, String s) {
-                return false;
-            }
-
-            @Override
-            public boolean canListen(SshdSocketAddress address, Session session) {
+            public boolean acceptServerProxyMetadata(ServerSession serverSession, Buffer buffer) throws Exception {
                 return true;
             }
-
-            @Override
-            public boolean canConnect(Type type, SshdSocketAddress sshdSocketAddress, Session session) {
-                return true;
-            }
-
         });
+        sshd.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
         sshd.setCommandFactory(new EmptyCommandFactory());
         sshd.setShellFactory(new ShellFactory() {
             @Override
